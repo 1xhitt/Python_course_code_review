@@ -4,32 +4,24 @@ from selenium import webdriver
 from selenium.webdriver import Chrome
 import parsing
 
-
-def get_gpu_chars(driver: webdriver.Chrome, url: str):
+def get_gpu_specs(driver: webdriver.Chrome, url: str):
     driver.get(url+"properties/")
     sleep(3)
     soup = bs4.BeautifulSoup(driver.page_source, 'html.parser')
     char_blocks = soup.find_all(
         'li', attrs={'class': 'app-catalog-10ib5jr e14ta1090'})
-    chars = dict()
+    specs = dict()
     for block in char_blocks:
         block: bs4.Tag
+        # commented out parts are deemed irrelevant
         if "Основные характеристики" in block.h4.text:
             data = parsing.parse_main(block)
         elif "Память":
             data = parsing.parse_memory(block)
-        elif "Охлаждение":
-            data = parsing.parse_cooling(block)
-        elif "Конструкция":
-            data = parsing.parse_construction(block)
-        elif "Технологии":
-            data = parsing.parse_technologies(block)
         elif "Разъемы":
             data = parsing.parse_sockets(block)
         elif "Питание":
             data = parsing.parse_power(block)
-        elif "Особенности":
-            data = parsing.parse_extra(block)
         elif "Размеры":
             data = parsing.parse_size(block)
         elif "Дополнительные характеристики":
@@ -37,8 +29,8 @@ def get_gpu_chars(driver: webdriver.Chrome, url: str):
         else:
             print("skipper")
             continue
-        chars = {**chars, **data}
-    return chars
+        specs = {**specs, **data}
+    return specs
 
 
 def get_product_urls(driver: webdriver.Chrome, start_url: str) -> list[str]:
