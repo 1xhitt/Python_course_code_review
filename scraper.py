@@ -8,11 +8,14 @@ import parsing, db
 
 MAX_PAGE_COUNT = 1 # debug
 DEBUG = False
+HEADLESS = False
 
 def get_gpu_specs(driver: webdriver.Chrome, url: str):
     """
     returns dict:\n
     {\n
+    'price' : int # rub\n
+    'url' :str \n
     'brand' : str, \n
     'model' : str, \n
     'chipset' : str, \n
@@ -37,8 +40,11 @@ def get_gpu_specs(driver: webdriver.Chrome, url: str):
     soup = bs4.BeautifulSoup(driver.page_source, 'html.parser')
     spec_blocks = soup.find_all(
         'li', attrs={'class': 'app-catalog-10ib5jr e14ta1090'})
+    price_raw = soup.find('span', {"class":"e1j9birj0 e106ikdt0 app-catalog-1f8xctp e1gjr6xo0"}).text
+    price = int("".join(price_raw.split()))
     specs = dict()
     specs["url"] = url
+    specs["price"] = price
     for block in spec_blocks:
         block: bs4.Tag
         # commented out parts are deemed irrelevant
@@ -71,8 +77,9 @@ def get_product_urls(driver: webdriver.Chrome, start_url: str) -> list[str]:
     first_url = ''
     while(True):
         print(f"page {page}:")
-        # if (page > MAX_PAGE_COUNT) and DEBUG: # debug
-        #     break 
+        if (page > MAX_PAGE_COUNT) and DEBUG: # debug
+            print("exit on DEBUG")
+            break 
         page_url = f"{start_url}?p={page}"
         driver.get(page_url)
         print("sleeping 5")
@@ -105,7 +112,8 @@ def get_product_urls(driver: webdriver.Chrome, start_url: str) -> list[str]:
 def main():
     print("starting driver")
     options = Options()
-    options.add_argument("--headless=new")
+    if HEADLESS:
+        options.add_argument("--headless=new")
     with Chrome(options=options) as driver:
         # driver.implicitly_wait(5)
         print("acquiring urls")

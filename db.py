@@ -5,7 +5,7 @@ DB_NAME = "db"
 def save_gpu(specs: dict[str : str]):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
-    cmd = f"""INSERT INTO gpus (id, brand, model, chipset, max_definition, base_freq, boost_freq, VRAM, VRAM_freq, bandwidth, HDMI_count, DisplayPort_count, power_pin_count, TDP, guarantee) VALUES ({get_id("GPU")}, '{specs['brand']}', '{specs['model']}', '{specs['chipset']}', '{specs['max_definition']}', {specs['base_freq']}, {specs['boost_freq']}, {specs['VRAM']}, {specs['VRAM_freq']}, {specs['bandwidth']}, {specs['HDMI_count']}, {specs['DisplayPort_count']}, {specs['power_pin_count']}, {specs['TDP']}, {specs['guarantee']});"""
+    cmd = f"""INSERT INTO gpus (id, price, brand, model, chipset, max_definition, base_freq, boost_freq, VRAM, VRAM_freq, bandwidth, HDMI_count, DisplayPort_count, power_pin_count, TDP, guarantee) VALUES ({get_id("GPU")}, {specs['price']}, '{specs['brand']}', '{specs['model']}', '{specs['chipset']}', '{specs['max_definition']}', {specs['base_freq']}, {specs['boost_freq']}, {specs['VRAM']}, {specs['VRAM_freq']}, {specs['bandwidth']}, {specs['HDMI_count']}, {specs['DisplayPort_count']}, {specs['power_pin_count']}, {specs['TDP']}, {specs['guarantee']});"""
     cmd.replace('None', 'NULL', -1)
     print(cmd)
     cur.execute(cmd)
@@ -17,9 +17,10 @@ def make_db():
     cur = conn.cursor()
     cur.execute("""CREATE TABLE gpus(
                 id INTEGER PRIMARY KEY,
+                price INTEGER,
                 brand CHAR(255),
                 model CHAR(255),
-                chipset CHAR(255) NOT NULL,
+                chipset CHAR(255),
                 max_definition CHAR(16),
                 base_freq INTEGER,
                 boost_freq INTEGER,
