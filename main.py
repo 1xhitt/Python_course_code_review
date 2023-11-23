@@ -1,8 +1,8 @@
-from time import sleep
 import bs4
+from time import sleep
 from selenium import webdriver
 from selenium.webdriver import Chrome
-import parsing
+import parsing, db
 
 def get_gpu_specs(driver: webdriver.Chrome, url: str):
     driver.get(url+"properties/")
@@ -11,23 +11,24 @@ def get_gpu_specs(driver: webdriver.Chrome, url: str):
     char_blocks = soup.find_all(
         'li', attrs={'class': 'app-catalog-10ib5jr e14ta1090'})
     specs = dict()
+    specs["url"] = url
     for block in char_blocks:
         block: bs4.Tag
         # commented out parts are deemed irrelevant
         if "Основные характеристики" in block.h4.text:
             data = parsing.parse_main(block)
-        elif "Память":
+        elif "Память" in block.h4.text:
             data = parsing.parse_memory(block)
-        elif "Разъемы":
+        elif "Разъемы" in block.h4.text:
             data = parsing.parse_sockets(block)
-        elif "Питание":
+        elif "Питание" in block.h4.text:
             data = parsing.parse_power(block)
-        elif "Размеры":
+        elif "Размеры" in block.h4.text:
             data = parsing.parse_size(block)
         elif "Дополнительные характеристики":
             data = parsing.parse_guarantee(block)
         else:
-            print("skipper")
+            print(f"skipped {block.h4.text}")
             continue
         specs = {**specs, **data}
     return specs
@@ -61,11 +62,15 @@ def get_product_urls(driver: webdriver.Chrome, start_url: str) -> list[str]:
 
 
 def main():
-
     with Chrome() as driver:
         driver.implicitly_wait(5)
         urls = get_product_urls(
             driver, "https://www.citilink.ru/catalog/videokarty/")
+        print("urls acquired")
+        for url in urls:
+            # probably can be done in threads 
+            specs = get_gpu_specs(driver, url)
+            db.save_gpu(specs)
 
 
 if __name__ == "__main__":
