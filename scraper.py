@@ -113,6 +113,7 @@ def main():
     print("starting driver")
     options = Options()
     if HEADLESS:
+        # note that headless driver can, sometimes hang
         options.add_argument("--headless=new")
     with Chrome(options=options) as driver:
         # driver.implicitly_wait(5)
