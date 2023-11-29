@@ -53,12 +53,16 @@ def parse_main(block: bs4.Tag) -> dict[str: any]:
         specs['max_definition'] = raw_specs['Максимальное']
     else:
         specs["max_definition"] = "NULL"
-    freq_raw = raw_specs['Частота графического']
-    freqs = list(map(int, NUMBER_PATTERN.findall(freq_raw)))
-    if len(freqs) > 1:
-        specs['base_freq'], specs['boost_freq'] = map(int, freqs)
+    if 'Частота графического' in specs.keys():
+        freq_raw = raw_specs['Частота графического']
+        freqs = list(map(int, NUMBER_PATTERN.findall(freq_raw)))
+        if len(freqs) > 1:
+            specs['base_freq'], specs['boost_freq'] = map(int, freqs)
+        else:
+            specs['base_freq'] = specs['boost_freq'] = freqs[0]
     else:
-        specs['base_freq'] = specs['boost_freq'] = freqs[0]
+        specs['base_freq'] = specs['boost_freq'] = "NULL"
+
     if 'Процессоров' in specs.keys():
         specs['core_count'] = int(raw_specs['Процессоров'])
     else:
