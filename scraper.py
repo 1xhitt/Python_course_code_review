@@ -3,12 +3,14 @@ from time import sleep
 from selenium import webdriver
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
-import parsing, db
+import parsing
+import db
 
 
-MAX_PAGE_COUNT = 1 # debug
+MAX_PAGE_COUNT = 1  # debug
 DEBUG = False
 HEADLESS = False
+
 
 def get_gpu_specs(driver: webdriver.Chrome, url: str):
     """
@@ -28,19 +30,19 @@ def get_gpu_specs(driver: webdriver.Chrome, url: str):
     'HDMI_count' : int, \n
     'DisplayPort_count' : int, \n
     'power_pin_count' : int, \n
-    'TDP' : int, # W \n
     'length' : int, # mm \n
     'width' : int, # mm \n
     'thickness' : int, # mm \n
     'guarantee' : int  # months \n
     }
     """
-    driver.get(url+"properties/")
+    driver.get(url + "properties/")
     sleep(3)
     soup = bs4.BeautifulSoup(driver.page_source, 'html.parser')
     spec_blocks = soup.find_all(
         'li', attrs={'class': 'app-catalog-10ib5jr e14ta1090'})
-    price_raw = soup.find('span', {"class":"e1j9birj0 e106ikdt0 app-catalog-1f8xctp e1gjr6xo0"}).text
+    price_raw = soup.find(
+        'span', {"class": "e1j9birj0 e106ikdt0 app-catalog-1f8xctp e1gjr6xo0"}).text
     price = int("".join(price_raw.split()))
     specs = dict()
     specs["url"] = url
@@ -77,15 +79,16 @@ def get_product_urls(driver: webdriver.Chrome, start_url: str) -> list[str]:
     first_url = ''
     while(True):
         print(f"page {page}:")
-        if (page > MAX_PAGE_COUNT) and DEBUG: # debug
+        if (page > MAX_PAGE_COUNT) and DEBUG:  # debug
             print("exit on DEBUG")
-            break 
+            break
         page_url = f"{start_url}?p={page}"
         driver.get(page_url)
         print("sleeping 5")
         sleep(5)
         soup = bs4.BeautifulSoup(driver.page_source, "html.parser")
-        main_section = soup.find('section', {"class":"edhylph0 app-catalog-1yo09mv e3tyxgd0"})
+        main_section = soup.find(
+            'section', {"class": "edhylph0 app-catalog-1yo09mv e3tyxgd0"})
         tittle_elements: list[bs4.PageElement] = main_section.find_all(
             'a', attrs={'class': 'app-catalog-9gnskf e1259i3g0'})
         print(f"elements collected; on this page: {len(tittle_elements)}")
@@ -103,7 +106,7 @@ def get_product_urls(driver: webdriver.Chrome, start_url: str) -> list[str]:
         for e in tittle_elements:
             e: bs4.element.Tag
             relative_url = e.attrs['href']
-            product_urls.append("https://www.citilink.ru/"+relative_url)
+            product_urls.append("https://www.citilink.ru/" + relative_url)
         page += 1
 
     return product_urls
@@ -124,12 +127,14 @@ def main():
         for url in urls:
             print("-----------------------------------------------------------------")
             print(f"url: {url}")
-            # probably can be done in threads 
+            # probably can be done in threads
             specs = get_gpu_specs(driver, url)
             print(specs)
             db.save_gpu(specs)
+            sleep(5)
         print("-----------------------------------------------------------------")
         print(f"scraped {len(urls)} gpus")
 
+
 if __name__ == "__main__":
-   main()
+    main()
