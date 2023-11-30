@@ -10,19 +10,13 @@ suggestor = processing.Suggestor()
 def suggest_gpu(message):
     price = int(message.text)
     gpu = suggestor.suggest(price)
-    if gpu is None:
-        ret = "Don't be this cheap!\n"
-    else:
-        ret = f"Лучшая карта дешевле {price}:\n {gpu.get_full_name()} за {gpu.price}\n"
-        ret += f"на чипсете {gpu.chipset}\n"
-        ret += f"она имееет {gpu.VRAM} Mb VRAM\n"
-        ret += f"{gpu.core_count} ядер " if gpu.core_count else ""
-        ret += f"частотой {gpu.base_freq}({gpu.boost_freq} в boost)\n" if gpu.base_freq else ""
-        ret += f"поддерцивает разрешение {gpu.max_definition}\n"
-        ret += f"{gpu.HDMI_count if gpu.HDMI_count else 0} HDMI и {gpu.DisplayPort_count if gpu.DisplayPort_count else 0} DisplayPort" 
-        ret += f"гарантия {gpu.guarantee} месяцев" if gpu.guarantee else ""
-        # print("suggersing")
-        # print(ret)
+    ret = f"Лучшая карта дешевле {price}:\n {gpu.get_full_name()} за {gpu.price}\n"\
+        + f"на чипсете {gpu.chipset}\n"\
+        + f"она имееет {gpu.VRAM} Mb VRAM с пропускной способностью {gpu.bandwidth} Gb/s,\n"\
+        + f"{gpu.core_count} ядер, частотой {gpu.base_freq}({gpu.boost_freq} в boost)\n"\
+        + f"поддерцивает разрешение {gpu.max_definition}, {gpu.HDMI_count} и {gpu.DisplayPort_count} HDMI и DisplayPort портов соответственно" \
+        + f"гарантия {gpu.guarantee} месяцев"
+    print("suggersing")
     bot.send_message(text=ret, chat_id=message.chat.id)
 
 
