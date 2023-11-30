@@ -1,3 +1,4 @@
+from curses import raw
 import bs4
 import re
 NUMBER_PATTERN = re.compile("[0-9]+")
@@ -72,11 +73,7 @@ def parse_main(block: bs4.Tag) -> dict[str: any]:
 def parse_memory(block: bs4.Tag) -> dict[str: str]:
     raw_specs = extract_specs(block)
     specs = dict()
-    if "Частота" in raw_specs.keys():
-        specs["VRAM_freq"] = int(NUMBER_PATTERN.findall(raw_specs['Частота'])[0])
-    else:
-        specs["VRAM_freq"] = "NULL"
-
+    specs["VRAM_freq"] = int(NUMBER_PATTERN.findall(raw_specs['Частота'])[0])
     specs["VRAM"] = int(NUMBER_PATTERN.findall(raw_specs['Объем'])[0])
     if "bandwidth" in specs.keys():
         specs["bandwidth"] = int(NUMBER_PATTERN.findall(raw_specs['Пропускная способность памяти'])[0])
