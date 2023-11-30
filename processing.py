@@ -1,5 +1,5 @@
-import db
 
+import db
 
 class GPU:
     """
@@ -50,12 +50,16 @@ class GPU:
         self.performance_index = self.compute_performance_index()
     
     def compute_performance_index(self) -> int:
-        memq = ((self.VRAM ** 2) * self.VRAM_freq) 
-        if self.core_count:
-            memq *= self.core_count
+        
+        memq = self.VRAM ** 2
+        memq *= self.VRAM_freq if self.VRAM_freq else 500
+        memq *= self.core_count if self.core_count else 100
+        
+        if self.base_freq:
+            procq = (self.base_freq +(2 * self.boost_freq)) / 3
+            # note that if boost freq is not mentioned it is assumed to be equal to base freq
         else:
-            memq *= 100
-        procq = (self.base_freq +(2 * self.boost_freq)) / 3
+            procq = 500
         return int((memq * procq) ** 1 / 2)
 
     def get_full_name(self) -> str:
