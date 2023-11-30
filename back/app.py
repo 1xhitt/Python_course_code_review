@@ -1,6 +1,4 @@
-from crypt import methods
-import os
-import flask
+import os, flask
 import scraper, db
 
 app = flask.Flask(__name__)
@@ -35,27 +33,50 @@ def suggest():
     """
     print("getting")
     resp = flask.json.loads(flask.request.json)
+    print(resp)
     specs = db.suggest_gpu(resp['price'])
-    gpu = flask.jsonify(
-        id = specs[0],
-        url = specs[1],
-        price = specs[2],
-        perf_index = specs[3],
-        brand = specs[4],
-        model = specs[5],
-        chipset = specs[6],
-        max_definition = specs[7],
-        core_count = specs[8],
-        base_freq = specs[9],
-        boost_freq = specs[10],
-        VRAM = specs[11],
-        VRAM_freq = specs[12],
-        bandwidth = specs[13],
-        HDMI_count = specs[14],
-        DisplayPort_count = specs[15],
-        power_pin_count = specs[16],
-        guarantee = specs[17]
-    )
+    if specs is None:
+        gpu = flask.jsonify(
+            id = None,
+            url = None,
+            price = None,
+            perf_index = None,
+            brand = None,
+            model = None,
+            chipset = None,
+            max_definition = None,
+            core_count = None,
+            base_freq = None,
+            boost_freq = None,
+            VRAM = None,
+            VRAM_freq = None,
+            bandwidth = None,
+            HDMI_count = None,
+            DisplayPort_count = None,
+            power_pin_count = None,
+            guarantee = None
+        )
+    else:
+        gpu = flask.jsonify(
+            id = specs[0],
+            url = specs[1],
+            price = specs[2],
+            perf_index = specs[3],
+            brand = specs[4],
+            model = specs[5],
+            chipset = specs[6],
+            max_definition = specs[7],
+            core_count = specs[8],
+            base_freq = specs[9],
+            boost_freq = specs[10],
+            VRAM = specs[11],
+            VRAM_freq = specs[12],
+            bandwidth = specs[13],
+            HDMI_count = specs[14],
+            DisplayPort_count = specs[15],
+            power_pin_count = specs[16],
+            guarantee = specs[17]
+        )
     return gpu, 200
 
 @app.route("/refresh", methods=["POST"])

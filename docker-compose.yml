@@ -3,10 +3,19 @@ services:
     build: ./back
     volumes:
       - crp-db:/db
+    ports:
+      - "6000:6000"
+      - "4443:4443"
+    networks:
+      - base
   bot:
     build: ./bot
     volumes:
       - crp-db:/usr/src/app/database
+    networks:
+      - base
+    depends_on:
+      - back
 
 volumes:
   crp-db:

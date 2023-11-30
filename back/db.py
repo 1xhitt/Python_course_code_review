@@ -84,7 +84,7 @@ def get_gpu(id: int) -> tuple:
 def suggest_gpu(price:int):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
-    gpus = cur.execute(f"SELECT * FROM gpus WHERE price < {price} ORDER BY perf_index").fetchone()
+    gpus = cur.execute(f"SELECT * FROM gpus WHERE price < {price} ORDER BY -1*perf_index").fetchone()
     return gpus
 
 
