@@ -1,6 +1,5 @@
 import os
 import sqlite3
-import sqlalchemy
 
 DB_NAME = "db"
 

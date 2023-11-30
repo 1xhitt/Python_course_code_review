@@ -1,4 +1,3 @@
-from calendar import c
 import telebot, processing
 bot: telebot.TeleBot
 suggestor: processing.Suggestor
