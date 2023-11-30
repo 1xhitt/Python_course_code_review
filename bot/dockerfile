@@ -1,0 +1,9 @@
+FROM python:3.10
+
+WORKDIR /usr/src/app/bot
+COPY *.py ./
+COPY ./requirement.txt ./
+
+RUN python3 -m pip install -r requirement.txt
+
+ENTRYPOINT [ "python3", "bot.py"]

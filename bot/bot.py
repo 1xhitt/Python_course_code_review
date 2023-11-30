@@ -1,14 +1,17 @@
-import telebot, processing, sys
+from flask import jsonify
+import requests, json
+import telebot, sys
 bot: telebot.TeleBot
-suggestor: processing.Suggestor
 TOKEN=sys.argv[1]  
 bot = telebot.TeleBot(TOKEN)
-suggestor = processing.Suggestor()
 
 @bot.message_handler(content_types=['text'], regexp="[0-9]+")
 def suggest_gpu(message):
     price = int(message.text)
-    gpu = suggestor.suggest(price)
+
+    enc = json.encoder.JSONEncoder()
+    price = enc.encode({"price" : 42000})
+    gpu = json.loads(requests.get("localhost:6000", enc.encode(price=price)).content)
     if gpu is None:
         ret = "Нет таких дешевок!\n"
     else:

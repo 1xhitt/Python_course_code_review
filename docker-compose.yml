@@ -1,0 +1,16 @@
+services:
+  back:
+    build: ./back
+    volumes:
+      - crp-db:/db
+  bot:
+    build: ./bot
+    volumes:
+      - crp-db:/usr/src/app/database
+
+volumes:
+  crp-db:
+
+networks:
+  base:
+    driver: bridge

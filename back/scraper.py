@@ -3,11 +3,10 @@ from time import sleep
 from selenium import webdriver
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
-import parsing
-import db
+import parsing, db
 
 
-MAX_PAGE_COUNT = 1  # debug``
+MAX_PAGE_COUNT = 1  # for debug
 DEBUG = False
 HEADLESS = False
 
@@ -30,9 +29,6 @@ def get_gpu_specs(driver: webdriver.Chrome, url: str):
     'HDMI_count' : int, \n
     'DisplayPort_count' : int, \n
     'power_pin_count' : int, \n
-    'length' : int, # mm \n
-    'width' : int, # mm \n
-    'thickness' : int, # mm \n
     'guarantee' : int  # months \n
     }
     """
@@ -112,7 +108,7 @@ def get_product_urls(driver: webdriver.Chrome, start_url: str) -> list[str]:
     return product_urls
 
 
-def main():
+def scrape():
     print("starting driver")
     options = Options()
     if HEADLESS:
@@ -134,7 +130,3 @@ def main():
             sleep(5)
         print("-----------------------------------------------------------------")
         print(f"scraped {len(urls)} gpus")
-
-
-if __name__ == "__main__":
-    main()
