@@ -8,7 +8,7 @@ import parsing, db
 
 MAX_PAGE_COUNT = 1  # for debug
 DEBUG = False
-HEADLESS = False
+# HEADLESS = False
 
 
 def get_gpu_specs(driver: webdriver.Chrome, url: str):
@@ -111,9 +111,14 @@ def get_product_urls(driver: webdriver.Chrome, start_url: str) -> list[str]:
 def scrape():
     print("starting driver")
     options = Options()
-    if HEADLESS:
-        # note that headless driver can, sometimes hang
-        options.add_argument("--headless=new")
+    # if HEADLESS:
+    #     # note that headless driver can, sometimes hang
+    #     options.add_argument("--headless=new")
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+
+    
     with Chrome(options=options) as driver:
         # driver.implicitly_wait(5)
         print("acquiring urls")

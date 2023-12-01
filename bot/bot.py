@@ -3,8 +3,8 @@ import telebot, sys
 bot: telebot.TeleBot
 TOKEN="6599398767:AAHPQrapoSpeNRuMVDP6J813RcV4_0ZVrso" # no bloody clue how to pass an arg via docker-compose, so...
 bot = telebot.TeleBot(TOKEN)
-back_ulr="0.0.0.0:6000"
-# back_ulr="localhost:6000"
+# back_adress="0.0.0.0:6000"
+back_adress="back:6000"
 
 headers={
     'Content-type':'application/json', 
@@ -18,8 +18,8 @@ def suggest_gpu(message):
 
     enc = json.encoder.JSONEncoder()
     budget_json = enc.encode({"price" : budget})
-    # print(budget_json)
-    req = requests.get(f"http://{back_ulr}/suggest", json=budget_json, headers=headers)
+    print(budget_json)
+    req = requests.get(f"http://{back_adress}/suggest", json=budget_json, headers=headers)
     gpu = json.loads(req.content)
     # print(req.request)
     # print(req.content)
@@ -41,10 +41,16 @@ def suggest_gpu(message):
 
 
 
-@bot.message_handler(commands=['start', 'help'])
+@bot.message_handler(commands=['scrape'])
 def send_welcome(message):
-	bot.send_message(text="Введи цену в рублях и я подскажу, что выбрать", chat_id=message.chat.id)
-     
+    bot.send_message(text="starting", chat_id=message.chat.id)
+    
+    requests.post(f"http://{back_adress}/refresh", headers=headers)
+	
+    bot.send_message(text="over", chat_id=message.chat.id)
+    
+
+
 
 if __name__ == "__main__":
     bot.infinity_polling()
