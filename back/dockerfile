@@ -1,0 +1,13 @@
+FROM joyzoursky/python-chromedriver
+
+WORKDIR /usr/src/app/back
+COPY ./requirement.txt ./
+
+RUN python3 -m pip install -r requirement.txt
+RUN mkdir /usr/src/app/database
+EXPOSE 6000:6000
+EXPOSE 80:80
+EXPOSE 4443:4443
+EXPOSE 4442:4442
+COPY *.py ./
+ENTRYPOINT [ "python3", "app.py"]
