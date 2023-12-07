@@ -3,7 +3,8 @@ from time import sleep
 from selenium import webdriver
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
-import parsing, db
+import parsing
+import db
 
 
 MAX_PAGE_COUNT = 1  # for debug
@@ -118,7 +119,6 @@ def scrape():
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
 
-    
     with Chrome(options=options) as driver:
         # driver.implicitly_wait(5)
         print("acquiring urls")

@@ -112,10 +112,6 @@ def parse_power(block: bs4.Tag) -> dict[str: str]:
             specs["power_pin_count"] = 0
     else:
         specs["power_pin_count"] = "NULL"
-    # if "TDP" in raw_specs.keys():
-    #     specs["TDP"] = int(NUMBER_PATTERN.match(raw_specs["Максимальное"])[0])
-    # else:
-    #     specs["TDP"] = "NULL"
     return specs
 
 

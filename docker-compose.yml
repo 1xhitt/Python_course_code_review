@@ -17,8 +17,20 @@ services:
     depends_on:
       - back
 
+  database:
+    image: postgres
+    environment:
+      POSTGRES_DB: "gpus"
+      POSTGRES_USER: "pguser"
+      POSTGRES_PASSWORD: "sadpguser123"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - pg-db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
 volumes:
-  crp-db:
+  pg-db:
 
 networks:
   base:

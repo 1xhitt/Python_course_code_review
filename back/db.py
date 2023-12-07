@@ -1,14 +1,20 @@
 import os
-import sqlite3
+# import sqlite3
+import psycopg2
 
-DB_NAME = "../database/db"
+DATABASE = "gpus"
+HOST = "pguser"
+USER = "sadpguser123"
+PASSWORD = "db_pass"
+PORT = "5432"
 
 
 def save_gpu(specs: dict[str: str]):
-    if not os.path.isfile(f"./{DB_NAME}"):
-        print("made new db")
-        make_db()
-    conn = sqlite3.connect(DB_NAME)
+    conn = psycopg2.connect(database=DATABASE,
+                            host=HOST,
+                            user=USER,
+                            password=PASSWORD,
+                            port=PORT)
     cur = conn.cursor()
     cmd = f"""INSERT INTO gpus (id, url, price, perf_index, brand, model, chipset, max_definition, core_count, base_freq, boost_freq, VRAM, VRAM_freq, bandwidth, HDMI_count, DisplayPort_count, power_pin_count, guarantee) VALUES ({make_id("GPU")}, '{specs['url']}', {specs['price']}, {compute_performance_index(specs)}, '{specs['brand']}', '{specs['model']}', '{specs['chipset']}', '{specs['max_definition']}', {specs['core_count']}, {specs['base_freq']}, {specs['boost_freq']}, {specs['VRAM']}, {specs['VRAM_freq']}, {specs['bandwidth']}, {specs['HDMI_count']}, {specs['DisplayPort_count']}, {specs['power_pin_count']}, {specs['guarantee']});"""
     cmd.replace('None', 'NULL', -1)
@@ -16,19 +22,24 @@ def save_gpu(specs: dict[str: str]):
     cur.execute(cmd)
     conn.commit()
 
+
 def compute_performance_index(specs: dict) -> int:
     memq = specs['VRAM']
     memq *= specs['VRAM_freq'] if 'VRAM_freq' in specs.keys() else 500
-    procq = (specs['base_freq'] +(2 * specs['boost_freq'])) / 3 if specs['boost_freq'] != "NULL" else 500
+    procq = (specs['base_freq'] + (2 * specs['boost_freq'])) / \
+        3 if specs['boost_freq'] != "NULL" else 500
     procq *= specs['core_count'] if specs['core_count'] != "NULL" else 100
     # print(memq)
     # print(procq)
     return int((memq * procq) ** 1 / 2)
 
 
-
 def make_db():
-    conn = sqlite3.connect(DB_NAME)
+    conn = psycopg2.connect(database=DATABASE,
+                            host=HOST,
+                            user=USER,
+                            password=PASSWORD,
+                            port=PORT)
     cur = conn.cursor()
     cur.execute("""CREATE TABLE gpus(
                 id INTEGER PRIMARY KEY,
@@ -60,7 +71,11 @@ def make_db():
 
 
 def make_id(name: str):
-    conn = sqlite3.connect(DB_NAME)
+    conn = psycopg2.connect(database=DATABASE,
+                            host=HOST,
+                            user=USER,
+                            password=PASSWORD,
+                            port=PORT)
     cur = conn.cursor()
     count = cur.execute(
         f"SELECT count FROM counts WHERE name='{name}'").fetchone()[0]
@@ -70,21 +85,35 @@ def make_id(name: str):
 
 
 def get_all_ids() -> list[int]:
-    conn = sqlite3.connect(DB_NAME)
+    conn = psycopg2.connect(database=DATABASE,
+                            host=HOST,
+                            user=USER,
+                            password=PASSWORD,
+                            port=PORT)
     cur = conn.cursor()
     ids = cur.execute(f"SELECT id FROM gpus;").fetchall()
     return [i[0] for i in ids]
 
 
 def get_gpu(id: int) -> tuple:
-    conn = sqlite3.connect(DB_NAME)
+    conn = psycopg2.connect(database=DATABASE,
+                            host=HOST,
+                            user=USER,
+                            password=PASSWORD,
+                            port=PORT)
     cur = conn.cursor()
     return cur.execute(f"SELECT * FROM gpus WHERE id={id};").fetchone()
 
-def suggest_gpu(price:int):
-    conn = sqlite3.connect(DB_NAME)
+
+def suggest_gpu(price: int):
+    conn = psycopg2.connect(database=DATABASE,
+                            host=HOST,
+                            user=USER,
+                            password=PASSWORD,
+                            port=PORT)
     cur = conn.cursor()
-    gpus = cur.execute(f"SELECT * FROM gpus WHERE price < {price} ORDER BY -1*perf_index").fetchone()
+    gpus = cur.execute(
+        f"SELECT * FROM gpus WHERE price < {price} ORDER BY -1*perf_index").fetchone()
     return gpus
 
 
