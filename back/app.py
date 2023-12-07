@@ -82,6 +82,7 @@ def suggest():
 @app.route("/refresh", methods=["POST"])
 def refresh():
     """
+    for manual start of scraping
     goes ahead and scrapes the website
     """
     if os.path.exists("../database/db"):
