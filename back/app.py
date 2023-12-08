@@ -13,25 +13,19 @@ def suggest():
         price : int
     }
     :return:{
-        id : int
-        url : str
-        price : int
-        perf_index : int
-        brand : str
-        model : str
-        chipset : str
-        max_definition : str
-        core_count : int
-        base_freq : int
-        boost_freq : int
-        VRAM : int
-        VRAM_freq : int
-        bandwidth : int
-        HDMI_count : int
-        DisplayPort_count : int
-        power_pin_count : int
-        TDP : int
-        guarantee : int
+        'id' : int,
+        'url' : str,
+        'price' : int,
+        'full_name' : str, 
+        'chipset' : str, 
+        'base_freq' : int,
+        'boost_freq' : int,
+        'VRAM' : int,
+        'VRAM_freq' : int, 
+        'HDMI_count' : int, 
+        'DisplayPort_count' : int, 
+        'power_input' : int,
+        'pin_count' : int, 
     }
     """
     print("getting")

@@ -21,20 +21,20 @@ DISPLAYPORT_PATTERN = re.compile("(?<=Display\sPort\sх\s)[0-9]+")
 def parse_specs(gpu_card: bs4.Tag):
     """
     returns dict:\n
-    {\n
-    'id' : int\n
-    'url' : str\n
-    'price' : int # rub\n
-    'full_name' : str, \n
-    'chipset' : str, \n
-    'base_freq' : int, # MHz \n
-    'boost_freq' : int | NULL, # MHz \n
-    'VRAM' : int, #Mb \n
-    'VRAM_freq' : int, # MHz \n
-    'HDMI_count' : int, \n
-    'DisplayPort_count' : int, \n
-    'power_input' : int #W, \n
-    'pin_count' : int #W, \n
+    {
+        'id' : int,
+        'url' : str,
+        'price' : int,
+        'full_name' : str, 
+        'chipset' : str, 
+        'base_freq' : int,
+        'boost_freq' : int,
+        'VRAM' : int,
+        'VRAM_freq' : int, 
+        'HDMI_count' : int, 
+        'DisplayPort_count' : int, 
+        'power_input' : int,
+        'pin_count' : int, 
     }
     """
     specs = dict()
