@@ -12,8 +12,8 @@ sys.stdout = sys.stderr
 OVERLY_VERBOSE = False
 
 NUMBER_PATTERN = re.compile("[0-9]+")
-FREQ_PATTERN = re.compile("[0-9]+(?!\sМГц)")
-MEM_PATTERN = re.compile("[0-9]+(?!\sГБ)")
+FREQ_PATTERN = re.compile("[0-9]+(?!МГц)")
+MEM_PATTERN = re.compile("[0-9]+(?!ГБ)")
 HDMI_PATTERN = re.compile("(?<=HDMI\sх\s)[0-9]+")
 DISPLAYPORT_PATTERN = re.compile("(?<=Display\sPort\sх\s)[0-9]+")
 
@@ -54,7 +54,7 @@ def parse_specs(gpu_card: bs4.Tag):
         if "Видеочипсет" in name:
             line:str = item.text
             first_coma = line.find(',')
-            specs['chipset'] = line[:first_coma]
+            specs['chipset'] = line[12:first_coma]
             numbers = FREQ_PATTERN.findall(line[first_coma:])
             if len(numbers) == 1:
                 specs['base_freq'] = int(numbers[0])
@@ -65,21 +65,24 @@ def parse_specs(gpu_card: bs4.Tag):
             pass
         elif "Память" in name:
             specs['VRAM'] = int(FREQ_PATTERN.findall(item.text)[0])
-            specs['VRAM_freq'] = int(MEM_PATTERN.findall(item.text)[2])
+            specs['VRAM_freq'] = int(MEM_PATTERN.findall(item.text)[0])
         elif "Разъемы" in name:
             hdmi = HDMI_PATTERN.findall(item.text)
             if hdmi:
                 specs["HDMI_count"] = int(hdmi[0])
             else:
-                specs["HDMI_count"] = "NULL"
+                specs["HDMI_count"] = 0
             displayport = DISPLAYPORT_PATTERN.findall(item.text)
             if displayport:
                 specs["DisplayPort_count"] = int(displayport[0])
             else:
-                specs["DisplayPort_count"] = "NULL"
+                specs["DisplayPort_count"] = 0
 
         elif "Питание" in name:
             numbers = NUMBER_PATTERN.findall(item.text)
+            if len(numbers) == 0:
+                specs["power_input"] = 0
+                specs["pin_count"] = 0
             if len(numbers) == 1:
                 specs["power_input"] = int(numbers[0])
                 specs["pin_count"] = 0
@@ -91,16 +94,12 @@ def parse_specs(gpu_card: bs4.Tag):
                 specs["power_input"] = int(numbers[2])
             else:
                 print(" -!  PROBLEM: " + item.text)
+                print(f"found {len(numbers)}, {numbers}")
         else:
             if OVERLY_VERBOSE:
                 print(f"  - skipped \"{name}\"")
     return specs
 
-    # {\n
-    # 'DisplayPort_count' : int, \n
-    # 'power_input' : int #W, \n
-    # 'pin_count' : int #W, \n
-    # }
 
 def get_gpus(driver: webdriver.Chrome, page_url: str) -> list[dict]:
     """
@@ -114,7 +113,11 @@ def get_gpus(driver: webdriver.Chrome, page_url: str) -> list[dict]:
     gpu_item_blocks = main_section.find_all('div', {"class" : "e12wdlvo0 app-catalog-1bogmvw e1loosed0"})
     print("start parsing")
     for block in gpu_item_blocks:
-        gpus.append(parse_specs(block))
+        try:
+            gpus.append(parse_specs(block))
+        except Exception:
+            print(" !!! - failed to parse a block")
+            print(block.text)
     print("end parsing")
     return gpus
 
@@ -131,7 +134,7 @@ def scrape():
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
     with Chrome(options=options) as driver:
         print("stating scraping")
-        url = "https://www.citilink.ru/catalog/videokarty/p="
+        url = "https://www.citilink.ru/catalog/videokarty/?p="
         page = 1
         scraped = 1
         first_gpu_url = ''
@@ -154,4 +157,3 @@ def scrape():
                 count += 1
             print(f"---------------  scraped {scraped} from page {page}  ---------------")
         print(f"saved {count} gpus")
-    db.print_db()

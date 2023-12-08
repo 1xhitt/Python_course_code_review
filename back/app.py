@@ -34,46 +34,40 @@ def suggest():
     specs = db.suggest_gpu(resp['price'])
     if specs is None:
         gpu = flask.jsonify(
-            id=None,
-            url=None,
-            price=None,
-            perf_index=None,
-            brand=None,
-            model=None,
-            chipset=None,
-            max_definition=None,
-            core_count=None,
-            base_freq=None,
-            boost_freq=None,
-            VRAM=None,
-            VRAM_freq=None,
-            bandwidth=None,
-            HDMI_count=None,
-            DisplayPort_count=None,
-            power_pin_count=None,
-            guarantee=None
+            id = None,
+            url = None,
+            price = None,
+            full_name = None,
+            chipset = None,
+            base_freq = None,
+            boost_freq = None,
+            VRAM = None,
+            VRAM_freq = None,
+            HDMI_count = None,
+            DisplayPort_count = None,
+            power_input = None,
+            pin_count = None
         )
     else:
         gpu = flask.jsonify(
             id=specs[0],
             url=specs[1],
             price=specs[2],
-            perf_index=specs[3],
-            brand=specs[4],
-            model=specs[5],
-            chipset=specs[6],
-            max_definition=specs[7],
-            core_count=specs[8],
-            base_freq=specs[9],
-            boost_freq=specs[10],
-            VRAM=specs[11],
-            VRAM_freq=specs[12],
-            bandwidth=specs[13],
-            HDMI_count=specs[14],
-            DisplayPort_count=specs[15],
-            power_pin_count=specs[16],
-            guarantee=specs[17]
+            full_name=specs[3],
+            chipset=specs[4],
+            base_freq=specs[5],
+            boost_freq=specs[6],
+            VRAM=specs[7],
+            VRAM_freq=specs[8],
+            HDMI_count=specs[9],
+            DisplayPort_count=specs[10],
+            power_input=specs[11],
+            pin_count=specs[12],
         )
+# 0 1 2 4
+# id, url, price, perf_index, full_name, chipset, base_freq, boost_freq, VRAM, VRAM_freq, HDMI_count, DisplayPort_count, power_input, pin_count
+# 0, 1, 2, perf_index, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
+    
     return gpu, 200
 
 

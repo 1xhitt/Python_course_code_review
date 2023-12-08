@@ -16,7 +16,6 @@ def save_gpu(specs: dict[str: str]):
                             port=PORT)
     cur = conn.cursor()
     cmd = f"""INSERT INTO gpus (id, url, price, perf_index, full_name, chipset, base_freq, boost_freq, VRAM, VRAM_freq, HDMI_count, DisplayPort_count, power_input, pin_count) VALUES ({specs['id']}, '{specs['url']}', {specs['price']}, {compute_performance_index(specs)}, '{specs['full_name']}', '{specs['chipset']}', {specs['base_freq']}, {specs['boost_freq']}, {specs['VRAM']}, {specs['VRAM_freq']}, {specs['HDMI_count']}, {specs['DisplayPort_count']}, {specs['power_input']}, {specs['pin_count']});"""
-    print(cmd)
     cur.execute(cmd)
     conn.commit()
 
@@ -79,18 +78,7 @@ def get_gpu(id: int) -> tuple:
     return cur.execute(f"SELECT * FROM gpus WHERE id={id};").fetchone()
 
 
-def print_db():
-    conn = psycopg2.connect(database=DATABASE,
-                            host=HOST,
-                            user=USER,
-                            password=PASSWORD,
-                            port=PORT)
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM gpus")
-    print(cur.fetchall())
-    conn.close()
-    
-
+# url, price, full_name, chipset, base_freq, boost_freq, VRAM, VRAM_freq, HDMI_count, DisplayPort_count, power_input, pin_count
 def suggest_gpu(price: int):
     conn = psycopg2.connect(database=DATABASE,
                             host=HOST,
@@ -98,8 +86,8 @@ def suggest_gpu(price: int):
                             password=PASSWORD,
                             port=PORT)
     cur = conn.cursor()
-    cmd = f"SELECT * FROM gpus WHERE price < {price} ORDER BY -1*perf_index;"
-    print(cmd)
+    cmd = f"SELECT id, url, price, full_name, chipset, base_freq, boost_freq, VRAM, VRAM_freq, HDMI_count, DisplayPort_count, power_input, pin_count FROM gpus WHERE price < {price} ORDER BY -1*perf_index;"
+    # print(cmd)
     cur.execute(cmd)
     gpus = cur.fetchone()
     conn.close()

@@ -21,25 +21,16 @@ def suggest_gpu(message):
     print(budget_json)
     req = requests.get(f"http://{back_adress}/suggest", json=budget_json, headers=headers)
     gpu = json.loads(req.content)
-    # print(req.request)
-    # print(req.content)
-    # print("------------------")
-    if None == gpu["model"]:
+    if None == gpu["price"]:
         ret = "Нет таких дешевок!\n"
     else:
-        ret = f"Лучшая карта дешевле {budget}:\n {gpu['brand'] + gpu['model']} за {gpu['price']}\n"
+        ret = f"Лучшая карта дешевле {budget}:\n {gpu['full_name']} за {gpu['price']}\n"
         ret += f"на чипсете {gpu['chipset']}\n"
-        ret += f"она имееет {gpu['VRAM']} Mb VRAM\n"
-        ret += f"{gpu['core_count']} ядер " if gpu['core_count'] else ""
-        ret += f"частотой {gpu['base_freq']}({gpu['boost_freq']} в boost)\n" if gpu['base_freq'] else ""
-        ret += f"поддерцивает разрешение {gpu['max_definition']}\n" if gpu['max_definition'] != "NULL" else ''
-        ret += f"{gpu['HDMI_count'] if gpu['HDMI_count'] else 0} HDMI и {gpu['DisplayPort_count'] if gpu['DisplayPort_count'] else 0} DisplayPort" 
-        ret += f"гарантия {gpu['guarantee']} месяцев" if gpu['guarantee'] else ""
-        # print("suggersing")
-        # print(ret)
+        ret += f"она имееет {gpu['VRAM']} Gb VRAM частотой {gpu['VRAM_freq']} MHz\n"
+        ret += f"и частоту ядра {gpu['base_freq']}({gpu['boost_freq']} в boost)\n"
+        ret += f"{gpu['HDMI_count']} HDMI и {gpu['DisplayPort_count']} DisplayPort\n" 
+        ret += gpu["url"]
     bot.send_message(text=ret, chat_id=message.chat.id)
-
-
 
 @bot.message_handler(commands=['scrape'])
 def send_welcome(message):
