@@ -5,14 +5,13 @@ services:
       POSTGRES_DB: "gpus"
       POSTGRES_USER: "pguser"
       POSTGRES_PASSWORD: "sadpguser123"
-      PGDATA: "/var/lib/postgresql/data/pgdata"
+      PGDATA: "/var/lib/postgresql-static/data/gpus"
     volumes:
-      - pg-db:/var/lib/postgresql/data
+      - pg-db-1:/var/lib/postgresql-static/data/gpus
     ports:
       - "5432:5432"
     networks:
       - base
-
   back:
     build: ./back
     ports:
@@ -31,7 +30,7 @@ services:
       - back
 
 volumes:
-  pg-db:
+  pg-db-1:
 
 networks:
   base:

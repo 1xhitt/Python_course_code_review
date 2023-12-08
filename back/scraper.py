@@ -3,160 +3,155 @@ from time import sleep
 from selenium import webdriver
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import parsing
-import db
+import db, re
+
 # docker-compose loses stdout
 import sys
 sys.stdout = sys.stderr
 
-MAX_PAGE_COUNT = 1  # for debug
-DEBUG = True
+OVERLY_VERBOSE = False
+
+NUMBER_PATTERN = re.compile("[0-9]+")
+FREQ_PATTERN = re.compile("[0-9]+(?!\sМГц)")
+MEM_PATTERN = re.compile("[0-9]+(?!\sГБ)")
+HDMI_PATTERN = re.compile("(?<=HDMI\sх\s)[0-9]+")
+DISPLAYPORT_PATTERN = re.compile("(?<=Display\sPort\sх\s)[0-9]+")
 
 
-def get_gpu_specs(driver: Chrome,  url: str):
+def parse_specs(gpu_card: bs4.Tag):
     """
     returns dict:\n
     {\n
+    'id' : int\n
+    'url' : str\n
     'price' : int # rub\n
-    'url' :str \n
-    'brand' : str, \n
-    'model' : str, \n
+    'full_name' : str, \n
     'chipset' : str, \n
-    'max_definition' str: , \n
     'base_freq' : int, # MHz \n
-    'boost_freq' : int, # MHz \n
+    'boost_freq' : int | NULL, # MHz \n
     'VRAM' : int, #Mb \n
     'VRAM_freq' : int, # MHz \n
-    'bandwidth' : int, # GB/s \n
     'HDMI_count' : int, \n
     'DisplayPort_count' : int, \n
-    'power_pin_count' : int, \n
-    'guarantee' : int  # months \n
+    'power_input' : int #W, \n
+    'pin_count' : int #W, \n
     }
     """
-    driver.get(url + "properties/")
-    driver.refresh()
-    sleep(2)
-    driver.execute_script("window.scrollTo(0, 2000);")
-    sleep(2)
-    soup = bs4.BeautifulSoup(driver.page_source, 'html.parser')
-    spec_blocks = soup.find_all(
-        'li', attrs={'class': 'app-catalog-10ib5jr e14ta1090'})
-    if len(spec_blocks) < 5:
-        print("waitint extra")
-        for block in spec_blocks:
-            print(block.h4.text)
-        sleep(10)
-        soup = bs4.BeautifulSoup(driver.page_source, 'html.parser')
-        spec_blocks = soup.find_all(
-        'li', attrs={'class': 'app-catalog-10ib5jr e14ta1090'})
-    
-
-    price_raw = soup.find(
-        'span', {"class": "e1j9birj0 e106ikdt0 app-catalog-1f8xctp e1gjr6xo0"}).text
-    price = int("".join(price_raw.split()))
     specs = dict()
-    specs["url"] = url
-    specs["price"] = price
-    for block in spec_blocks:
-        block: bs4.Tag
-        # commented out parts are deemed irrelevant
-        block_title = block.h4.text
-        print(block_title)
-        print(specs)
-        if "Основные характеристики" in block_title:
-            data = parsing.parse_main(block)
-        elif "Память" in block_title:
-            data = parsing.parse_memory(block)
-        elif "Разъемы" in block_title:
-            data = parsing.parse_sockets(block)
-        elif "Питание" in block_title:
-            data = parsing.parse_power(block)
-        # elif "Размеры" in block_title:
-        #     data = parsing.parse_size(block)
-        elif "Дополнительные характеристики" in block_title:
-            data = parsing.parse_guarantee(block)
+    # get loose values
+    title = gpu_card.find('a', {'class' : 'app-catalog-9gnskf e1259i3g0'})
+    specs['full_name'] = title.text[11:]
+    specs['url'] =  "https://www.citilink.ru" + title.attrs['href']
+    price_raw = gpu_card.find('span', {"class" : 'e1j9birj0 e106ikdt0 app-catalog-j8h82j e1gjr6xo0'}).text
+    specs["price"] = int("".join(list(NUMBER_PATTERN.findall(price_raw))))
+    # get specs 
+    spec_items = gpu_card.find_all('li', {'class' : 'app-catalog-17ju59h e4qu3682'})
+    if OVERLY_VERBOSE:
+        print(f"parsing {specs['full_name']}")
+    for item in spec_items:
+        name = item.span.text
+        # print(name)
+        if "Видеочипсет" in name:
+            line:str = item.text
+            first_coma = line.find(',')
+            specs['chipset'] = line[:first_coma]
+            numbers = FREQ_PATTERN.findall(line[first_coma:])
+            if len(numbers) == 1:
+                specs['base_freq'] = int(numbers[0])
+                specs['boost_freq'] = int(numbers[0])
+            else:
+                specs['base_freq'] = int(numbers[0])
+                specs['boost_freq'] = int(numbers[1])
+            pass
+        elif "Память" in name:
+            specs['VRAM'] = int(FREQ_PATTERN.findall(item.text)[0])
+            specs['VRAM_freq'] = int(MEM_PATTERN.findall(item.text)[2])
+        elif "Разъемы" in name:
+            hdmi = HDMI_PATTERN.findall(item.text)
+            if hdmi:
+                specs["HDMI_count"] = int(hdmi[0])
+            else:
+                specs["HDMI_count"] = "NULL"
+            displayport = DISPLAYPORT_PATTERN.findall(item.text)
+            if displayport:
+                specs["DisplayPort_count"] = int(displayport[0])
+            else:
+                specs["DisplayPort_count"] = "NULL"
+
+        elif "Питание" in name:
+            numbers = NUMBER_PATTERN.findall(item.text)
+            if len(numbers) == 1:
+                specs["power_input"] = int(numbers[0])
+                specs["pin_count"] = 0
+            elif len(numbers) == 2:
+                specs["pin_count"] = int(numbers[0])
+                specs["power_input"] = int(numbers[1])
+            elif '+' in item.text:
+                specs["pin_count"] = int(numbers[0]) + int(numbers[1])
+                specs["power_input"] = int(numbers[2])
+            else:
+                print(" -!  PROBLEM: " + item.text)
         else:
-            print(f"skipped {block_title}")
-            continue
-        specs = {**specs, **data}
+            if OVERLY_VERBOSE:
+                print(f"  - skipped \"{name}\"")
     return specs
 
+    # {\n
+    # 'DisplayPort_count' : int, \n
+    # 'power_input' : int #W, \n
+    # 'pin_count' : int #W, \n
+    # }
 
-def get_product_urls(driver: webdriver.Chrome, start_url: str) -> list[str]:
+def get_gpus(driver: webdriver.Chrome, page_url: str) -> list[dict]:
     """
-    returns list[str] with absolute urls of products
+    returns list[dicts] with gpus from parse_specs\n
     """
-    product_urls: list[str] = []
-    page = 1
-    first_url = ''
-    while(True):
-        print(f"page {page}:")
-        if (page > MAX_PAGE_COUNT) and DEBUG:  # debug
-            print("exit on DEBUG")
-            break
-        page_url = f"{start_url}?p={page}"
-        driver.get(page_url)
-        print("sleeping 5")
-        sleep(5)
-        soup = bs4.BeautifulSoup(driver.page_source, "html.parser")
-        main_section = soup.find(
-            'section', {"class": "edhylph0 app-catalog-1yo09mv e3tyxgd0"})
-        tittle_elements: list[bs4.PageElement] = main_section.find_all(
-            'a', attrs={'class': 'app-catalog-9gnskf e1259i3g0'})
-        print(f"elements collected; on this page: {len(tittle_elements)}")
-        if not tittle_elements:
-            # empty page
-            print("exit on empty page")
-            break
-        if first_url == tittle_elements[0].attrs['href']:
-            # first page is displayed again
-            print("exit on repeat")
-            break
-        elif first_url == '':
-            first_url = tittle_elements[0].attrs['href']
-        # print(len(tittle_elements), type(tittle_elements[0]))
-        for e in tittle_elements:
-            e: bs4.element.Tag
-            relative_url = e.attrs['href']
-            product_urls.append("https://www.citilink.ru/" + relative_url)
-        page += 1
-
-    return product_urls
+    gpus = []
+    driver.get(page_url)
+    sleep(5)
+    soup = bs4.BeautifulSoup(driver.page_source, "html.parser")
+    main_section = soup.find('section', {"class": "edhylph0 app-catalog-1yo09mv e3tyxgd0"})
+    gpu_item_blocks = main_section.find_all('div', {"class" : "e12wdlvo0 app-catalog-1bogmvw e1loosed0"})
+    print("start parsing")
+    for block in gpu_item_blocks:
+        gpus.append(parse_specs(block))
+    print("end parsing")
+    return gpus
 
 
 def scrape():
-    db.make_db()
+    db.remake_db(True)
     print("starting driver")
     options = Options()
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    # options.add_argument("--window-size=1920,1080")
     options.add_argument("--headless=new")
     options.add_argument('--start-maximized')
-    # options.add_argument("--disable-gpu")
 
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
     with Chrome(options=options) as driver:
-        driver.implicitly_wait(5)
-        print("acquiring urls")
-        urls = get_product_urls(
-            driver, "https://www.citilink.ru/catalog/videokarty/")
-        print("urls acquired")
-        for url in urls:
-            sleep(5)
-            print("-----------------------------------------------------------------")
-            print(f"url: {url}")
-            # probably can be done in threads
-            specs = get_gpu_specs(driver, url)
-            try:
-                pass
-            except Exception:
-                print(f"failed, {Exception}")
-                continue
-            print(specs)
-            db.save_gpu(specs)
-        print("-----------------------------------------------------------------")
-        print(f"scraped {len(urls)} gpus")
+        print("stating scraping")
+        url = "https://www.citilink.ru/catalog/videokarty/p="
+        page = 1
+        scraped = 1
+        first_gpu_url = ''
+        count = 0
+        while scraped:
+            gpus = get_gpus(driver, url+str(page))
+            scraped = len(gpus)
+            page += 1
+            print("scrape finished, saving")
+            if first_gpu_url == '':
+                first_gpu_url = gpus[0]["url"]
+            elif first_gpu_url == gpus[0]["url"]:
+                print(" !!! returned to p=1. Exiting")
+                scraped = 0
+                gpus = []
+            for gpu in gpus:
+                # print(gpu)
+                gpu['id'] = count
+                db.save_gpu(gpu)
+                count += 1
+            print(f"---------------  scraped {scraped} from page {page}  ---------------")
+        print(f"saved {count} gpus")
+    db.print_db()
