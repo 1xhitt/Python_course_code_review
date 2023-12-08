@@ -3,16 +3,19 @@ from time import sleep
 from selenium import webdriver
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import parsing
 import db
-
+# docker-compose loses stdout
+import sys
+sys.stdout = sys.stderr
 
 MAX_PAGE_COUNT = 1  # for debug
-DEBUG = False
-# HEADLESS = False
+DEBUG = True
 
 
-def get_gpu_specs(driver: webdriver.Chrome, url: str):
+def get_gpu_specs(driver: Chrome,  url: str):
     """
     returns dict:\n
     {\n
@@ -34,10 +37,23 @@ def get_gpu_specs(driver: webdriver.Chrome, url: str):
     }
     """
     driver.get(url + "properties/")
-    sleep(3)
+    driver.refresh()
+    sleep(2)
+    driver.execute_script("window.scrollTo(0, 2000);")
+    sleep(2)
     soup = bs4.BeautifulSoup(driver.page_source, 'html.parser')
     spec_blocks = soup.find_all(
         'li', attrs={'class': 'app-catalog-10ib5jr e14ta1090'})
+    if len(spec_blocks) < 5:
+        print("waitint extra")
+        for block in spec_blocks:
+            print(block.h4.text)
+        sleep(10)
+        soup = bs4.BeautifulSoup(driver.page_source, 'html.parser')
+        spec_blocks = soup.find_all(
+        'li', attrs={'class': 'app-catalog-10ib5jr e14ta1090'})
+    
+
     price_raw = soup.find(
         'span', {"class": "e1j9birj0 e106ikdt0 app-catalog-1f8xctp e1gjr6xo0"}).text
     price = int("".join(price_raw.split()))
@@ -48,6 +64,8 @@ def get_gpu_specs(driver: webdriver.Chrome, url: str):
         block: bs4.Tag
         # commented out parts are deemed irrelevant
         block_title = block.h4.text
+        print(block_title)
+        print(specs)
         if "Основные характеристики" in block_title:
             data = parsing.parse_main(block)
         elif "Память" in block_title:
@@ -110,28 +128,35 @@ def get_product_urls(driver: webdriver.Chrome, start_url: str) -> list[str]:
 
 
 def scrape():
+    db.make_db()
     print("starting driver")
     options = Options()
-    # if HEADLESS:
-    #     # note that headless driver can, sometimes hang
-    #     options.add_argument("--headless=new")
-    options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
+    # options.add_argument("--window-size=1920,1080")
+    options.add_argument("--headless=new")
+    options.add_argument('--start-maximized')
+    # options.add_argument("--disable-gpu")
 
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
     with Chrome(options=options) as driver:
-        # driver.implicitly_wait(5)
+        driver.implicitly_wait(5)
         print("acquiring urls")
         urls = get_product_urls(
             driver, "https://www.citilink.ru/catalog/videokarty/")
         print("urls acquired")
         for url in urls:
+            sleep(5)
             print("-----------------------------------------------------------------")
             print(f"url: {url}")
             # probably can be done in threads
             specs = get_gpu_specs(driver, url)
+            try:
+                pass
+            except Exception:
+                print(f"failed, {Exception}")
+                continue
             print(specs)
             db.save_gpu(specs)
-            sleep(5)
         print("-----------------------------------------------------------------")
         print(f"scraped {len(urls)} gpus")

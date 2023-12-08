@@ -1,22 +1,4 @@
 services:
-  back:
-    build: ./back
-    volumes:
-      - crp-db:/db
-    ports:
-      - "6000:6000"
-      - "4443:4443"
-    networks:
-      - base
-  bot:
-    build: ./bot
-    volumes:
-      - crp-db:/usr/src/app/database
-    networks:
-      - base
-    depends_on:
-      - back
-
   database:
     image: postgres
     environment:
@@ -28,6 +10,25 @@ services:
       - pg-db:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - base
+
+  back:
+    build: ./back
+    ports:
+      - "6000:6000"
+      - "4443:4443"
+    networks:
+      - base
+    depends_on:
+      - database
+
+  bot:
+    build: ./bot
+    networks:
+      - base
+    depends_on:
+      - back
 
 volumes:
   pg-db:

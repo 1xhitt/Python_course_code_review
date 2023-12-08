@@ -3,9 +3,9 @@ import os
 import psycopg2
 
 DATABASE = "gpus"
-HOST = "pguser"
-USER = "sadpguser123"
-PASSWORD = "db_pass"
+HOST = "database"
+USER = "pguser"
+PASSWORD = "sadpguser123"
 PORT = "5432"
 
 
@@ -41,7 +41,7 @@ def make_db():
                             password=PASSWORD,
                             port=PORT)
     cur = conn.cursor()
-    cur.execute("""CREATE TABLE gpus(
+    cur.execute("""CREATE TABLE IF NOT EXISTS gpus(
                 id INTEGER PRIMARY KEY,
                 url CHAR(255),
                 price INTEGER NOT NULL,
@@ -63,10 +63,11 @@ def make_db():
                 guarantee INTEGER
     );""")
 
-    cur.execute(f"""CREATE TABLE counts(
+    cur.execute(f"""CREATE TABLE IF NOT EXISTS counts(
                 name CHAR(63),
                 count INT);""")
-    cur.execute('INSERT INTO counts (name, count) VALUES ("GPU", 0);')
+    if cur.execute("SELECT COUNT(*) FROM counts;") == 0:
+        cur.execute('INSERT INTO counts (name, count) VALUES ("GPU", 0);')
     conn.commit()
 
 
