@@ -2,6 +2,7 @@ import os
 import flask
 import scraper
 import db
+from apscheduler.schedulers.background import BackgroundScheduler
 
 app = flask.Flask(__name__)
 
@@ -77,11 +78,12 @@ def refresh():
     for manual start of scraping
     goes ahead and scrapes the website
     """
-    if os.path.exists("../database/db"):
-        os.remove("../database/db")
     scraper.scrape()
     return flask.jsonify(), 200
 
 
 if __name__ == "__main__":
+    s = BackgroundScheduler()
+    s.add_job(func = scraper.scrape, trigger='interval', hours=8)
+    s.start()
     app.run("0.0.0.0", "6000")
