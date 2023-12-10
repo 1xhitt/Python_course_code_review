@@ -1,4 +1,5 @@
 import os
+from click import Group
 # import sqlite3
 import psycopg2
 
@@ -43,9 +44,9 @@ def remake_db(drop_tables = False):
                 perf_index INTEGER NOT NULL,
                 url CHAR(255) NOT NULL,
                 price INTEGER NOT NULL,
-                brand CHAR(64) NOT NULL,
-                name CHAR(64) NOT NULL,
-                chipset CHAR(64) NOT NULL,
+                brand CHAR(16) NOT NULL,
+                name CHAR(256) NOT NULL,
+                chipset CHAR(256) NOT NULL,
                 base_freq INTEGER,
                 boost_freq INTEGER,
                 VRAM INTEGER,
@@ -55,8 +56,8 @@ def remake_db(drop_tables = False):
                 power_input INTEGER,
                 pin_count INTEGER);""")
     # needed to store awailable brands and chipsets
-    cur.execute("CREATE TABLE brands(id INTEGER PRIMARY KEY, brand CHAR(64));")
-    cur.execute("CREATE TABLE chipsets(id INTEGER PRIMARY KEY, chipset CHAR(64));")
+    cur.execute("CREATE TABLE brands(id INTEGER PRIMARY KEY, brand CHAR(16));")
+    cur.execute("CREATE TABLE chipsets(id INTEGER PRIMARY KEY, chipset CHAR(256));")
     conn.commit()
 
 def collect_brands():
@@ -92,18 +93,47 @@ def collect_chipsets():
         id += 1
     conn.commit()
 
-def get_all_ids() -> list[int]:
+def run(cmd:str) -> list[int]:
+    """debug use only.\n 
+    called exclusively from scraper.py
+    to see if data was saved in a correct manner"""
     conn = psycopg2.connect(database=DATABASE,
                             host=HOST,
                             user=USER,
                             password=PASSWORD,
                             port=PORT)
     cur = conn.cursor()
-    cur.execute(f"SELECT id FROM gpus;")
+    cur.execute(cmd)
     ids = cur.fetchall()
     conn.close()
-    return [i[0] for i in ids]
+    return ids
+\
 
+def get_all_brands() -> list[str]:
+    conn = psycopg2.connect(database=DATABASE,
+                            host=HOST,
+                            user=USER,
+                            password=PASSWORD,
+                            port=PORT)
+    cur = conn.cursor()
+    cur.execute(f"SELECT brand FROM brands;")
+    vals = cur.fetchall()
+    conn.close()
+    return [i[0][:i[0].find('   ')] for i in vals]
+
+
+
+def get_all_chipsets() -> list[str]:
+    conn = psycopg2.connect(database=DATABASE,
+                            host=HOST,
+                            user=USER,
+                            password=PASSWORD,
+                            port=PORT)
+    cur = conn.cursor()
+    cur.execute(f"SELECT chipset FROM chipsets;")
+    vals = cur.fetchall()
+    conn.close()
+    return [i[0][i[0].find('   ')] for i in vals]
 
 def get_gpu(id: int) -> tuple:
     conn = psycopg2.connect(database=DATABASE,
@@ -115,22 +145,21 @@ def get_gpu(id: int) -> tuple:
     conn.close()
     return cur.execute(f"SELECT * FROM gpus WHERE id={id};").fetchone()
 
-
-# url, price, full_name, chipset, base_freq, boost_freq, VRAM, VRAM_freq, HDMI_count, DisplayPort_count, power_input, pin_count
-def suggest_gpu(price: int):
+def suggest_gpu(price: int, brand:str = "ANY", chipset:str = "ANY"):
     conn = psycopg2.connect(database=DATABASE,
                             host=HOST,
                             user=USER,
                             password=PASSWORD,
                             port=PORT)
     cur = conn.cursor()
-    cmd = f"SELECT id, url, price, full_name, chipset, base_freq, boost_freq, VRAM, VRAM_freq, HDMI_count, DisplayPort_count, power_input, pin_count FROM gpus WHERE price < {price} ORDER BY -1*perf_index;"
-    # print(cmd)
+    cmd = f"SELECT id, url, price, brand, name, chipset, base_freq, boost_freq, VRAM, VRAM_freq, HDMI_count, DisplayPort_count, power_input, pin_count FROM gpus WHERE price < {price}"
+    if brand != "ANY":
+        cmd += f" AND brand='{brand}'"
+    if chipset != "ANY":
+        cmd += f" AND chipset='{chipset}'"
+    cmd += " ORDER BY -1*perf_index;"
     cur.execute(cmd)
-    gpus = cur.fetchone()
+
+    gpu = cur.fetchone()
     conn.close()
-    return gpus
-
-
-# if __name__ == "__main__":
-#     make_db()
+    return gpu

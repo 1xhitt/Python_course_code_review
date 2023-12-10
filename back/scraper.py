@@ -1,16 +1,16 @@
-import bs4
+import bs4, re, random
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
-import db, re
+import db
 
 # docker-compose loses stdout
 import sys
 sys.stdout = sys.stderr
 
-OVERLY_VERBOSE = False
-DEBUG = True # scrape only one page
+OVERLY_VERBOSE = False    # print details
+DEBUG = False             # scrape only one page
 
 NUMBER_PATTERN = re.compile("[0-9]+")
 FREQ_PATTERN = re.compile("[0-9]+(?!МГц)")
@@ -68,8 +68,9 @@ def parse_specs(gpu_card: bs4.Tag):
                 specs['boost_freq'] = int(numbers[1])
             pass
         elif "Память" in name:
-            specs['VRAM'] = int(FREQ_PATTERN.findall(item.text)[0])
-            specs['VRAM_freq'] = int(MEM_PATTERN.findall(item.text)[0])
+            nums = NUMBER_PATTERN.findall(item.text)
+            specs['VRAM'] = int(nums[0])
+            specs['VRAM_freq'] = int(nums[2])
         elif "Разъемы" in name:
             hdmi = HDMI_PATTERN.findall(item.text)
             if hdmi:
@@ -111,7 +112,9 @@ def get_gpus(driver: webdriver.Chrome, page_url: str) -> list[dict]:
     """
     gpus = []
     driver.get(page_url)
-    sleep(5)
+    st = random.randint(5, 15)
+    print(f"sleeping {st}s")
+    sleep(st)
     soup = bs4.BeautifulSoup(driver.page_source, "html.parser")
     main_section = soup.find('section', {"class": "edhylph0 app-catalog-1yo09mv e3tyxgd0"})
     gpu_item_blocks = main_section.find_all('div', {"class" : "e12wdlvo0 app-catalog-1bogmvw e1loosed0"})
@@ -144,7 +147,11 @@ def scrape():
         first_gpu_url = ''
         count = 0
         while scraped:
-            gpus = get_gpus(driver, url+str(page))
+            try:
+                gpus = get_gpus(driver, url+str(page))
+            except Exception:
+                print(f" !!! failed to scrape page {page}")
+                continue
             scraped = len(gpus)
             page += 1
             print("scrape finished, saving")

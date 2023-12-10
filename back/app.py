@@ -17,7 +17,8 @@ def suggest():
         'id' : int,
         'url' : str,
         'price' : int,
-        'full_name' : str, 
+        'brand' : str, 
+        'name' : str, 
         'chipset' : str, 
         'base_freq' : int,
         'boost_freq' : int,
@@ -32,13 +33,14 @@ def suggest():
     print("getting")
     resp = flask.json.loads(flask.request.json)
     print(resp)
-    specs = db.suggest_gpu(resp['price'])
+    specs = db.suggest_gpu(resp['price'], resp["brand"], resp["chipset"])
     if specs is None:
         gpu = flask.jsonify(
             id = None,
             url = None,
             price = None,
-            full_name = None,
+            brand = None,
+            name = None,
             chipset = None,
             base_freq = None,
             boost_freq = None,
@@ -54,21 +56,18 @@ def suggest():
             id=specs[0],
             url=specs[1],
             price=specs[2],
-            full_name=specs[3],
-            chipset=specs[4],
-            base_freq=specs[5],
-            boost_freq=specs[6],
-            VRAM=specs[7],
-            VRAM_freq=specs[8],
-            HDMI_count=specs[9],
-            DisplayPort_count=specs[10],
-            power_input=specs[11],
-            pin_count=specs[12],
-        )
-# 0 1 2 4
-# id, url, price, perf_index, full_name, chipset, base_freq, boost_freq, VRAM, VRAM_freq, HDMI_count, DisplayPort_count, power_input, pin_count
-# 0, 1, 2, perf_index, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
-    
+            brand=specs[3],
+            name=specs[4],
+            chipset=specs[5],
+            base_freq=specs[6],
+            boost_freq=specs[7],
+            VRAM=specs[8],
+            VRAM_freq=specs[9],
+            HDMI_count=specs[10],
+            DisplayPort_count=specs[11],
+            power_input=specs[12],
+            pin_count=specs[13],
+        ) 
     return gpu, 200
 
 
@@ -80,6 +79,25 @@ def refresh():
     """
     scraper.scrape()
     return flask.jsonify(), 200
+
+@app.route("/brands", methods=["GET"])
+def fetch_brands():
+    """
+    :returns:
+    {[brands:str]}
+    """
+    brands = db.get_all_brands()
+    return flask.jsonify(brands), 200
+
+
+@app.route("/chipsets", methods=["GET"])
+def fetch_chipsets():
+    """
+    :returns:
+    {[chipsets:str]}
+    """
+    chipsets = db.get_all_chipsets()
+    return flask.jsonify(chipsets), 200
 
 
 if __name__ == "__main__":
