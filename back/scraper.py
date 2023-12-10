@@ -10,6 +10,7 @@ import sys
 sys.stdout = sys.stderr
 
 OVERLY_VERBOSE = False
+DEBUG = True # scrape only one page
 
 NUMBER_PATTERN = re.compile("[0-9]+")
 FREQ_PATTERN = re.compile("[0-9]+(?!МГц)")
@@ -25,7 +26,8 @@ def parse_specs(gpu_card: bs4.Tag):
         'id' : int,
         'url' : str,
         'price' : int,
-        'full_name' : str, 
+        'brand' : str, 
+        'name' : str, 
         'chipset' : str, 
         'base_freq' : int,
         'boost_freq' : int,
@@ -40,7 +42,9 @@ def parse_specs(gpu_card: bs4.Tag):
     specs = dict()
     # get loose values
     title = gpu_card.find('a', {'class' : 'app-catalog-9gnskf e1259i3g0'})
-    specs['full_name'] = title.text[11:]
+    full_name = title.text[11:]
+    specs['brand'] = full_name[:full_name.find(' ')]
+    specs['name'] = full_name[full_name.find(' ') + 1:]
     specs['url'] =  "https://www.citilink.ru" + title.attrs['href']
     price_raw = gpu_card.find('span', {"class" : 'e1j9birj0 e106ikdt0 app-catalog-j8h82j e1gjr6xo0'}).text
     specs["price"] = int("".join(list(NUMBER_PATTERN.findall(price_raw))))
@@ -144,6 +148,9 @@ def scrape():
             scraped = len(gpus)
             page += 1
             print("scrape finished, saving")
+            if not gpus:
+                print(' - exit on empty scrape')
+                break
             if first_gpu_url == '':
                 first_gpu_url = gpus[0]["url"]
             elif first_gpu_url == gpus[0]["url"]:
@@ -156,4 +163,9 @@ def scrape():
                 db.save_gpu(gpu)
                 count += 1
             print(f"---------------  scraped {scraped} from page {page}  ---------------")
+            if DEBUG:
+                print(" - !!! exit on DEBUG")
+                break
         print(f"saved {count} gpus")
+    db.collect_brands()
+    db.collect_chipsets()
