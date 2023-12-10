@@ -1,0 +1,13 @@
+# db
+DATABASE = "gpus"
+HOST = "database"
+USER = "pguser"
+PASSWORD = "sadpguser123"
+PORT = "5432"
+# perf_index
+BOOST_CORE_FREQ_WEIGHT = 2
+BASE_CORE_FREQ_WEIGHT = 1
+VRAM_WEIGHT = 4
+VRAM_FREQ_WEIGHT = 1
+MEM_WEIGHT = 1
+PROC_WEIGHT = 1

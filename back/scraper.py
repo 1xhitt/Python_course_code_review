@@ -1,4 +1,6 @@
-import bs4, re, random
+import bs4
+import re
+import random
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver import Chrome
@@ -41,22 +43,24 @@ def parse_specs(gpu_card: bs4.Tag):
     """
     specs = dict()
     # get loose values
-    title = gpu_card.find('a', {'class' : 'app-catalog-9gnskf e1259i3g0'})
+    title = gpu_card.find('a', {'class': 'app-catalog-9gnskf e1259i3g0'})
     full_name = title.text[11:]
     specs['brand'] = full_name[:full_name.find(' ')]
     specs['name'] = full_name[full_name.find(' ') + 1:]
-    specs['url'] =  "https://www.citilink.ru" + title.attrs['href']
-    price_raw = gpu_card.find('span', {"class" : 'e1j9birj0 e106ikdt0 app-catalog-j8h82j e1gjr6xo0'}).text
+    specs['url'] = "https://www.citilink.ru" + title.attrs['href']
+    price_raw = gpu_card.find(
+        'span', {"class": 'e1j9birj0 e106ikdt0 app-catalog-j8h82j e1gjr6xo0'}).text
     specs["price"] = int("".join(list(NUMBER_PATTERN.findall(price_raw))))
-    # get specs 
-    spec_items = gpu_card.find_all('li', {'class' : 'app-catalog-17ju59h e4qu3682'})
+    # get specs
+    spec_items = gpu_card.find_all(
+        'li', {'class': 'app-catalog-17ju59h e4qu3682'})
     if OVERLY_VERBOSE:
         print(f"parsing {specs['full_name']}")
     for item in spec_items:
         name = item.span.text
         # print(name)
         if "Видеочипсет" in name:
-            line:str = item.text
+            line: str = item.text
             first_coma = line.find(',')
             specs['chipset'] = line[12:first_coma]
             numbers = FREQ_PATTERN.findall(line[first_coma:])
@@ -116,8 +120,10 @@ def get_gpus(driver: webdriver.Chrome, page_url: str) -> list[dict]:
     print(f"sleeping {st}s")
     sleep(st)
     soup = bs4.BeautifulSoup(driver.page_source, "html.parser")
-    main_section = soup.find('section', {"class": "edhylph0 app-catalog-1yo09mv e3tyxgd0"})
-    gpu_item_blocks = main_section.find_all('div', {"class" : "e12wdlvo0 app-catalog-1bogmvw e1loosed0"})
+    main_section = soup.find(
+        'section', {"class": "edhylph0 app-catalog-1yo09mv e3tyxgd0"})
+    gpu_item_blocks = main_section.find_all(
+        'div', {"class": "e12wdlvo0 app-catalog-1bogmvw e1loosed0"})
     print("start parsing")
     for block in gpu_item_blocks:
         try:
@@ -138,7 +144,8 @@ def scrape():
     options.add_argument("--headless=new")
     options.add_argument('--start-maximized')
 
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
+    options.add_argument(
+        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
     with Chrome(options=options) as driver:
         print("stating scraping")
         url = "https://www.citilink.ru/catalog/videokarty/?p="
@@ -169,7 +176,8 @@ def scrape():
                 gpu['id'] = count
                 db.save_gpu(gpu)
                 count += 1
-            print(f"---------------  scraped {scraped} from page {page}  ---------------")
+            print(
+                f"---------------  scraped {scraped} from page {page}  ---------------")
             if DEBUG:
                 print(" - !!! exit on DEBUG")
                 break

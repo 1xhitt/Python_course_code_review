@@ -36,20 +36,20 @@ def suggest():
     specs = db.suggest_gpu(resp['price'], resp["brand"], resp["chipset"])
     if specs is None:
         gpu = flask.jsonify(
-            id = None,
-            url = None,
-            price = None,
-            brand = None,
-            name = None,
-            chipset = None,
-            base_freq = None,
-            boost_freq = None,
-            VRAM = None,
-            VRAM_freq = None,
-            HDMI_count = None,
-            DisplayPort_count = None,
-            power_input = None,
-            pin_count = None
+            id=None,
+            url=None,
+            price=None,
+            brand=None,
+            name=None,
+            chipset=None,
+            base_freq=None,
+            boost_freq=None,
+            VRAM=None,
+            VRAM_freq=None,
+            HDMI_count=None,
+            DisplayPort_count=None,
+            power_input=None,
+            pin_count=None
         )
     else:
         gpu = flask.jsonify(
@@ -67,7 +67,7 @@ def suggest():
             DisplayPort_count=specs[11],
             power_input=specs[12],
             pin_count=specs[13],
-        ) 
+        )
     return gpu, 200
 
 
@@ -79,6 +79,7 @@ def refresh():
     """
     scraper.scrape()
     return flask.jsonify(), 200
+
 
 @app.route("/brands", methods=["GET"])
 def fetch_brands():
@@ -102,6 +103,6 @@ def fetch_chipsets():
 
 if __name__ == "__main__":
     s = BackgroundScheduler()
-    s.add_job(func = scraper.scrape, trigger='interval', hours=8)
+    s.add_job(func=scraper.scrape, trigger='interval', hours=8)
     s.start()
     app.run("0.0.0.0", "6000")
