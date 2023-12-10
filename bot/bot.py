@@ -23,7 +23,7 @@ user_settings: dict[int: dict[str: str]] = dict()
 user_settings.setdefault(dict)
 
 
-@bot.message_handler(content_types=['text'], regexp="[0-9]+")
+@bot.message_handler(content_types=['text'], regexp="^[0-9]+")
 def suggest_gpu(message):
     budget = int(message.text)
     brand = user_settings[message.chat.id]["brand"]
@@ -62,7 +62,7 @@ def set_brand(message):
     chipsets = json.loads(req.content)
     markup = telebot.types.ReplyKeyboardMarkup()
     markup.add(*["set to " + chipsets for chipsets in chipsets])
-    user_settings[message.chat.id]['active_setting'] = "chipsets"
+    user_settings[message.chat.id]['active_setting'] = "chipset"
     bot.send_message(message.chat.id, "which one?", reply_markup=markup)
     pass
 
@@ -74,11 +74,11 @@ def set_value(message):
         print("No active setting")
         return
     elif active_setting == 'brand':
-        val = (message.text).split(' ')[2]
+        val = message.text[7:]
         user_settings[message.chat.id]["brand"] = val
         bot.send_message(message.chat.id, f"changed brand to <{val}>", reply_markup=telebot.types.ReplyKeyboardRemove())
     elif active_setting == 'chipset':
-        val = (message.text).split(' ')
+        val = message.text[7:]
         user_settings[message.chat.id]["chipset"] = val
         bot.send_message(message.chat.id, f"changed chipset to <{val}>", reply_markup=telebot.types.ReplyKeyboardRemove())
     user_settings[message.chat.id]['active_setting'] = "NONE"

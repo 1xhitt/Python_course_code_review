@@ -1,3 +1,4 @@
+# GPU_assistant (https://t.me/GPU_assistant_bot)
 __scraping:__
  - раз в 8 часов запускается скрапинг
  - /scrape чтобы запустить его вручную

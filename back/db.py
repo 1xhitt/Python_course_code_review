@@ -71,7 +71,7 @@ def collect_brands():
     brands = list(set([i[0] for i in cur.fetchall()]))
     id = 0
     for brand in brands:
-        brand:str = brand[:brand.find(' ')]
+        brand:str = brand[:brand.find('   ')]
         cur.execute(f"INSERT INTO brands (id, brand) VALUES ({id}, '{brand}');")
         id += 1
     conn.commit()
@@ -88,7 +88,7 @@ def collect_chipsets():
     chipsets = list(set([i[0] for i in cur.fetchall()]))
     id = 0
     for chipset in chipsets:
-        chipset:str = chipset[:chipset.find(' ')]
+        chipset:str = chipset[:chipset.find('   ')]
         cur.execute(f"INSERT INTO chipsets (id, chipset) VALUES ({id}, '{chipset}');")
         id += 1
     conn.commit()
@@ -107,7 +107,7 @@ def run(cmd:str) -> list[int]:
     ids = cur.fetchall()
     conn.close()
     return ids
-\
+
 
 def get_all_brands() -> list[str]:
     conn = psycopg2.connect(database=DATABASE,
@@ -133,7 +133,7 @@ def get_all_chipsets() -> list[str]:
     cur.execute(f"SELECT chipset FROM chipsets;")
     vals = cur.fetchall()
     conn.close()
-    return [i[0][i[0].find('   ')] for i in vals]
+    return [i[0][:i[0].find('   ')] for i in vals]
 
 def get_gpu(id: int) -> tuple:
     conn = psycopg2.connect(database=DATABASE,
